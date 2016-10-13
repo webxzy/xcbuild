@@ -11,34 +11,32 @@
 
 #include <cstring>
 
+#if !_WIN32
 #include <strings.h>
-#include <unistd.h>
-#include <libgen.h>
+#endif
 
 using libutil::FSUtil;
 
 std::string FSUtil::
 GetDirectoryName(std::string const &path)
 {
-    if (path.find('/') == std::string::npos) {
-        // dirname() returns '.' for empty
+    std::string::size_type pos = path.rfind('/');
+    if (pos == std::string::npos) {
         return std::string();
-    }
-
-    std::string copy(path);
-    return ::dirname(&copy[0]);
+	} else {
+        return path.substr(0, pos);
+	}
 }
 
 std::string FSUtil::
 GetBaseName(std::string const &path)
 {
-    if (path.empty()) {
-        // basename() returns '.' for empty
-        return std::string();
+    std::string::size_type pos = path.rfind('/');
+    if (pos == std::string::npos) {
+        return path;
+    } else {
+        return path.substr(pos + 1);
     }
-
-    std::string copy(path);
-    return ::basename(&copy[0]);
 }
 
 std::string FSUtil::
@@ -116,7 +114,11 @@ IsFileExtension(std::string const &path, std::string const &extension, bool inse
     }
 
     if (insensitive) {
+#if _WIN32
+        return ::_stricmp(pathExtension.c_str(), extension.c_str()) == 0;
+#else
         return ::strcasecmp(pathExtension.c_str(), extension.c_str()) == 0;
+#endif
     } else {
         return pathExtension == extension;
     }
@@ -133,7 +135,11 @@ IsFileExtension(std::string const &path, std::initializer_list<std::string> cons
     for (auto const &extension : extensions) {
         bool match = false;
         if (insensitive) {
+#if _WIN32
+            match = ::_stricmp(pathExtension.c_str(), extension.c_str()) == 0;
+#else
             match = ::strcasecmp(pathExtension.c_str(), extension.c_str()) == 0;
+#endif
         } else {
             match = pathExtension == extension;
         }

@@ -16,9 +16,13 @@ add_library(car SHARED
             Sources/Writer.cpp
             )
 
-find_package(ZLIB REQUIRED)
-target_include_directories(car PRIVATE "${ZLIB_INCLUDE_DIR}")
-target_link_libraries(car PRIVATE ${ZLIB_LIBRARIES})
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
+  # TODO
+else ()
+  find_package(ZLIB REQUIRED)
+  target_include_directories(car PRIVATE "${ZLIB_INCLUDE_DIR}")
+  target_link_libraries(car PRIVATE ${ZLIB_LIBRARIES})
+endif ()
 
 find_library(COMPRESSION compression)
 if ("${COMPRESSION}" STREQUAL "COMPRESSION-NOTFOUND")

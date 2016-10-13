@@ -56,10 +56,14 @@ add_library(plist SHARED
             Sources/Format/Any.cpp
             )
 
-find_package(LibXml2 REQUIRED)
-target_include_directories(plist PRIVATE "${LIBXML2_INCLUDE_DIR}")
-target_compile_definitions(plist PRIVATE "${LIBXML2_DEFINITIONS}")
-target_link_libraries(plist PRIVATE ${LIBXML2_LIBRARIES})
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
+  # TODO
+else ()
+  find_package(LibXml2 REQUIRED)
+  target_include_directories(plist PRIVATE "${LIBXML2_INCLUDE_DIR}")
+  target_compile_definitions(plist PRIVATE "${LIBXML2_DEFINITIONS}")
+  target_link_libraries(plist PRIVATE ${LIBXML2_LIBRARIES})
+endif ()
 
 target_include_directories(plist PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Headers")
 target_include_directories(plist PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/PrivateHeaders")
