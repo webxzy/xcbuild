@@ -7,7 +7,7 @@
 # of patent rights can be found in the PATENTS file in the same directory.
 #
 
-add_library(graphics SHARED
+add_library(graphics
             Sources/Image.cpp
             Sources/PixelFormat.cpp
             Sources/Format/PNG.cpp
@@ -15,15 +15,21 @@ add_library(graphics SHARED
 target_link_libraries(graphics PUBLIC ext)
 target_include_directories(graphics PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Headers")
 
-find_package(ZLIB REQUIRED)
-target_link_libraries(graphics PUBLIC ext "${ZLIB_LIBRARIES}")
-target_include_directories(graphics PRIVATE "${ZLIB_INCLUDE_DIR}")
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
+  # TODO
+else ()
+  find_package(ZLIB REQUIRED)
+  target_link_libraries(graphics PUBLIC ext "${ZLIB_LIBRARIES}")
+  target_include_directories(graphics PRIVATE "${ZLIB_INCLUDE_DIR}")
+endif ()
 
 if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
   find_library(CORE_FOUNDATION CoreFoundation)
   find_library(CORE_GRAPHICS CoreGraphics)
   find_library(IMAGE_IO ImageIO)
   target_link_libraries(graphics PUBLIC "${CORE_FOUNDATION}" "${CORE_GRAPHICS}" "${IMAGE_IO}")
+elseif ("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
+   # TODO
 else ()
   set(PNG_STATIC ON)
   find_package(PNG REQUIRED)

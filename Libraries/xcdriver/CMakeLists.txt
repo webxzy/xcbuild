@@ -7,7 +7,7 @@
 # of patent rights can be found in the PATENTS file in the same directory.
 #
 
-add_library(xcdriver SHARED
+add_library(xcdriver
             Sources/Action.cpp
             Sources/Driver.cpp
             Sources/Options.cpp
