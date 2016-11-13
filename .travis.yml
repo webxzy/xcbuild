@@ -108,11 +108,11 @@ matrix:
             - *linux-build-packages
     - os: linux
       dist: trusty
-      compiler: clang-cl
+      compiler: clang-cl-3.8
       sudo: required
       env:
-        - CC=clang-cl
-        - CXX=clang-cl
+        - CC=clang-cl-3.8
+        - CXX=clang-cl-3.8
         - *wine-build-env
         - *wine-env
       before_install:
