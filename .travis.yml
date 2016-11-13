@@ -1,6 +1,7 @@
 language: generic
 
 script:
+  - ninja --version
   - make
   - make test
 
@@ -96,6 +97,9 @@ matrix:
         - sudo add-apt-repository -y ppa:wine/wine-builds
         - sudo apt-get update -qq || true
         - sudo apt-get install -qq -y --no-install-recommends winehq-devel
+        - wget https://github.com/ninja-build/ninja/releases/download/v1.7.2/ninja-linux.zip
+        - unzip ninja-linux.zip
+        - sudo cp ninja /usr/bin
       addons:
         apt:
           sources:
@@ -119,6 +123,9 @@ matrix:
         - sudo add-apt-repository -y ppa:wine/wine-builds
         - sudo apt-get update -qq || true
         - sudo apt-get install -qq -y --no-install-recommends winehq-devel
+        - wget https://github.com/ninja-build/ninja/releases/download/v1.7.2/ninja-linux.zip
+        - unzip ninja-linux.zip
+        - sudo cp ninja /usr/bin
       addons:
         apt:
           sources:
