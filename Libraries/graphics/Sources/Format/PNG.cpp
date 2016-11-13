@@ -16,7 +16,15 @@ using graphics::Format::PNG;
 using graphics::Image;
 using graphics::PixelFormat;
 
-#if defined(__APPLE__)
+#if _WIN32
+
+std::pair<ext::optional<Image>, std::string> PNG::
+Read(std::vector<uint8_t> const &contents)
+{
+    return std::make_pair(ext::nullopt, "TODO png support");
+}
+
+#elif defined(__APPLE__)
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreGraphics/CoreGraphics.h>
@@ -360,6 +368,16 @@ Read(std::vector<uint8_t> const &contents)
 
 #endif
 
+#if _WIN32
+
+std::pair<ext::optional<std::vector<uint8_t>>, std::string> PNG::
+Write(Image const &image)
+{
+    return std::make_pair(ext::nullopt, "TODO png support");
+}
+
+#else
+
 #include <arpa/inet.h>
 #include <zlib.h>
 
@@ -535,3 +553,5 @@ Write(Image const &image)
 
     return std::make_pair(png, std::string());
 }
+
+#endif

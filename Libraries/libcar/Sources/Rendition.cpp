@@ -15,7 +15,12 @@
 #include <cstring>
 #include <cstdio>
 
+#if _WIN32
+// TODO: zlib
+#else
 #include <zlib.h>
+#define HAVE_ZLIB 1
+#endif
 
 #if defined(__APPLE__)
 #include <Availability.h>
@@ -343,6 +348,7 @@ Decode(struct car_rendition_value *value)
         }
 
         if (header1->compression == car_rendition_data_compression_magic_zlib) {
+#if HAVE_ZLIB
             z_stream strm;
             strm.zalloc = Z_NULL;
             strm.zfree = Z_NULL;
@@ -370,6 +376,10 @@ Decode(struct car_rendition_value *value)
             }
 
             offset += (uncompressed_length - strm.avail_out);
+#else
+            fprintf(stderr, "error: unable to handle zlib\n");
+            return ext::nullopt;
+#endif
         } else if (header1->compression == car_rendition_data_compression_magic_rle) {
             fprintf(stderr, "error: unable to handle RLE\n");
             return ext::nullopt;
