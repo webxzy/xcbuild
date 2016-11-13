@@ -6,41 +6,40 @@ script:
 
 sudo: false
 
-build-sources:
-  linux: &linux-build-sources
-    - george-edison55-precise-backports
-  wine: &wine-build-sources
-    - *linux-build-sources
-    - ppa:ubuntu-wine/ppa
+build-shared:
+  build-sources:
+    linux: &linux-build-sources
+      - george-edison55-precise-backports
+    wine: &wine-build-sources
+      - *linux-build-sources
+      - ppa:ubuntu-wine/ppa
+  build-dependencies:
+    linux: &linux-build-dependencies
+      - pkg-config
+      - ninja-build
+      - cmake
+      - cmake-data
+    wine: &wine-build-dependencies
+      - *linux-build-dependencies
+      - wine
+    osx: &osx-build-dependencies
+      - brew reinstall cmake
+      - brew reinstall ninja
+  build-environment:
+    linux: &linux-build-environment
+      - NINJA_JOBS=2 # Travis is so parallel it runs out of memory. Limit that.
+    wine: &wine-build-environment
+      - *linux-build-environment
 
-build-dependencies:
-  linux: &linux-build-dependencies
-    - pkg-config
-    - ninja-build
-    - cmake
-    - cmake-data
-  wine: &wine-build-dependencies
-    - *linux-build-dependencies
-    - wine
-  osx: &osx-build-dependencies
-    - brew reinstall cmake
-    - brew reinstall ninja
-
-build-environment:
-  linux: &linux-build-environment
-    - NINJA_JOBS=2 # Travis is so parallel it runs out of memory. Limit that.
-  wine: &wine-build-environment
-    - *linux-build-environment
-
-environment:
-  wine: &wine-environment
-    - TEST_RUNNER=wine # Use Wine to run Windows tests.
-
-dependencies:
-  linux: &linux-dependencies
-    - zlib1g-dev
-    - libpng-dev
-    - libxml2-dev
+shared:
+  environment:
+    wine: &wine-environment
+      - TEST_RUNNER=wine # Use Wine to run Windows tests.
+  dependencies:
+    linux: &linux-dependencies
+      - zlib1g-dev
+      - libpng-dev
+      - libxml2-dev
 
 matrix:
   include:
