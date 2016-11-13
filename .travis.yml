@@ -22,9 +22,10 @@ build-shared:
       - *linux-build-packages
   build-env:
     linux: &linux-build-env
-      - NINJA_JOBS=2 # Travis is so parallel it runs out of memory. Limit that.
+      - NINJA_FLAGS=-j2 # Travis is so parallel it runs out of memory. Limit that.
     wine: &wine-build-env
       - *linux-build-env
+      - CMAKE_FLAGS=-DCMAKE_SYSTEM_NAME=Generic
 
 shared:
   env:
