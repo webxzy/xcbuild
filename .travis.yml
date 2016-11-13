@@ -89,23 +89,22 @@ matrix:
       env:
         - CC=i686-w64-mingw32-gcc
         - CXX=i686-w64-mingw32-g++
-        # - *wine-build-env
-        # - *wine-env
-      # before_install:
-        # - sudo add-apt-repository -y ppa:wine/wine-builds
-        # - sudo apt-get update -q
-        # - sudo dpkg --add-architecture i386
+        - *wine-build-env
+        - *wine-env
+      before_install:
+        - sudo dpkg --add-architecture i386
+        - sudo add-apt-repository -y ppa:wine/wine-builds
+        - sudo apt-get update -qq || true
+        - sudo apt-get install -qq -y --no-install-recommends winehq-devel
       addons:
         apt:
           sources:
-            # - *wine-build-sources
-            - *linux-build-sources
+            - *wine-build-sources
           packages:
             - binutils-mingw-w64-i686
             - gcc-mingw-w64-i686
             - g++-mingw-w64-i686
-            # - *wine-build-packages
-            - *linux-build-packages
+            - *wine-build-packages
     - os: linux
       dist: trusty
       compiler: clang-cl-3.8
