@@ -30,7 +30,7 @@ project:
 	$(cmake) -B$(project) -H. -G Xcode $(cmake_flags)
 
 test: all
-	set -e; for test in build/test_*; do echo; echo "$$test"; ./$$test; done
+	set -e; for test in build/test_*; do echo; echo "$$test"; $$TEST_RUNNER ./$$test; done
 
 clean:
 	rm -rf $(build)

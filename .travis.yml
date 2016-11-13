@@ -6,57 +6,120 @@ script:
 
 sudo: false
 
+build-sources:
+  linux: &linux-build-sources
+    - george-edison55-precise-backports
+  wine: &wine-build-sources
+    - *linux-build-sources
+    - ppa:ubuntu-wine/ppa
+
+build-dependencies:
+  linux: &linux-build-dependencies
+    - pkg-config
+    - ninja-build
+    - cmake
+    - cmake-data
+  wine: &wine-build-dependencies
+    - *linux-build-dependencies
+    - wine
+  osx: &osx-build-dependencies
+    - brew reinstall cmake
+    - brew reinstall ninja
+
+build-environment:
+  linux: &linux-build-environment
+    - NINJA_JOBS=2 # Travis is so parallel it runs out of memory. Limit that.
+  wine: &wine-build-environment
+    - *linux-build-environment
+
+environment:
+  wine: &wine-environment
+    - TEST_RUNNER=wine # Use Wine to run Windows tests.
+
+dependencies:
+  linux: &linux-dependencies
+    - zlib1g-dev
+    - libpng-dev
+    - libxml2-dev
+
 matrix:
   include:
     - os: linux
       dist: trusty
-      compiler: clang3.9
+      sudo: required
+      compiler: clang3.8
       env:
-        - CC=clang-3.9
-        - CXX=clang++-3.9
-        - NINJA_JOBS=2 # Travis is so parallel it runs out of memory. Limit that.
+        - CC=clang-3.8
+        - CXX=clang++-3.8
+        - *linux-build-environment
       addons:
         apt:
           sources:
-            - george-edison55-precise-backports
-            - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main'
-              key_url: 'http://apt.llvm.org/llvm-snapshot.gpg.key'
+            - llvm-toolchain-precise-3.8
+            - *linux-build-sources
           packages:
-            - clang-3.9
-            - pkg-config
-            - zlib1g-dev
-            - libpng-dev
-            - libxml2-dev
-            - ninja-build
-            - cmake
-            - cmake-data
+            - clang-3.8
+            - *linux-build-dependencies
+            - *linux-dependencies
     - os: linux
       dist: trusty
       compiler: gcc4.8
+      sudo: required
       env:
         - CC=gcc-4.8
         - CXX=g++-4.8
-        - NINJA_JOBS=2 # Travis is so parallel it runs out of memory. Limit that.
+        - *linux-build-environment
       addons:
         apt:
           sources:
-            - george-edison55-precise-backports
             - ubuntu-toolchain-r-test
+            - *linux-build-sources
           packages:
             - gcc-4.8
             - g++-4.8
-            - pkg-config
-            - zlib1g-dev
-            - libpng-dev
-            - libxml2-dev
-            - ninja-build
-            - cmake
-            - cmake-data
+            - *linux-build-dependencies
+            - *linux-dependencies
     - os: osx
       osx_image: xcode7.2
       compiler: clang
       before_install:
         - brew update
       install:
-        - brew reinstall cmake
-        - brew reinstall ninja
+        - *osx-build-dependencies
+    - os: linux
+      dist: trusty
+      compiler: mingw32
+      sudo: required
+      env:
+        - CC=i686-w64-mingw32-gcc
+        - CXX=i686-w64-mingw32-g++
+        - *wine-build-environment
+        - *wine-environment
+      addons:
+        apt:
+          sources:
+            - *wine-build-sources
+          packages:
+            - binutils-mingw-w64-i686
+            - gcc-mingw-w64-i686
+            - g++-mingw-w64-i686
+            - *wine-build-dependencies
+            - *wine-dependencies
+    - os: linux
+      dist: trusty
+      compiler: clang-cl
+      sudo: required
+      env:
+        - CC=clang-cl
+        - CXX=clang-cl
+        - *wine-build-environment
+        - *wine-environment
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-precise-3.8
+            - *wine-build-sources
+          packages:
+            - clang-3.8
+            - *wine-build-dependencies
+            - *wine-dependencies
