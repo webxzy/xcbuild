@@ -125,4 +125,5 @@ matrix:
           packages:
             - clang-3.8
             - winehq-devel
+            - wine-devel
             - *wine-build-packages
