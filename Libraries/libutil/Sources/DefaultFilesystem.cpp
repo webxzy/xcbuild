@@ -58,12 +58,12 @@ isDirectory(std::string const &path) const
 #if _WIN32
     return false;
 #else
-	struct stat st;
-	if (::stat(path.c_str(), &st) < 0) {
-		return false;
-	} else {
-		return S_ISDIR(st.st_mode);
-	}
+    struct stat st;
+    if (::stat(path.c_str(), &st) < 0) {
+        return false;
+    } else {
+        return S_ISDIR(st.st_mode);
+    }
 #endif
 }
 
@@ -71,14 +71,14 @@ bool DefaultFilesystem::
 isSymbolicLink(std::string const &path) const
 {
 #if _WIN32
-	return false;
+    return false;
 #else
-	struct stat st;
-	if (::lstat(path.c_str(), &st) < 0) {
-		return false;
-	} else {
-		return S_ISLNK(st.st_mode);
-	}
+    struct stat st;
+    if (::lstat(path.c_str(), &st) < 0) {
+        return false;
+    } else {
+        return S_ISLNK(st.st_mode);
+    }
 #endif
 }
 
@@ -86,7 +86,7 @@ bool DefaultFilesystem::
 isReadable(std::string const &path) const
 {
 #if _WIN32
-	return false;
+    return false;
 #else
     return ::access(path.c_str(), R_OK) == 0;
 #endif
@@ -96,7 +96,7 @@ bool DefaultFilesystem::
 isWritable(std::string const &path) const
 {
 #if _WIN32
-	return false;
+    return false;
 #else
     return ::access(path.c_str(), W_OK) == 0;
 #endif
