@@ -15,11 +15,17 @@ add_library(graphics SHARED
 target_link_libraries(graphics PUBLIC ext)
 target_include_directories(graphics PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Headers")
 
-find_package(ZLIB REQUIRED)
-target_link_libraries(graphics PUBLIC ext "${ZLIB_LIBRARIES}")
-target_include_directories(graphics PRIVATE "${ZLIB_INCLUDE_DIR}")
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
+  # TODO
+else ()
+  find_package(ZLIB REQUIRED)
+  target_link_libraries(graphics PUBLIC ext "${ZLIB_LIBRARIES}")
+  target_include_directories(graphics PRIVATE "${ZLIB_INCLUDE_DIR}")
+endif ()
 
-if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
+  # TODO
+elseif ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
   find_library(CORE_FOUNDATION CoreFoundation)
   find_library(CORE_GRAPHICS CoreGraphics)
   find_library(IMAGE_IO ImageIO)
