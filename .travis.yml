@@ -21,7 +21,7 @@ build-shared:
       - george-edison55-precise-backports
     wine: &wine-build-sources
       - *linux-build-sources
-      - ppa:wine/wine-builds
+      - sourceline: 'ppa:wine/wine-builds'
   build-packages:
     linux: &linux-build-packages
       - pkg-config
