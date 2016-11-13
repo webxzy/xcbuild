@@ -102,7 +102,6 @@ matrix:
           sources:
             - *wine-build-sources
           packages:
-            - binutils-mingw-w64-i686
             - gcc-mingw-w64-i686
             - g++-mingw-w64-i686
             - *wine-build-packages
@@ -113,6 +112,7 @@ matrix:
       env:
         - CC=clang-cl-3.8
         - CXX=clang-cl-3.8
+        - LD=i686-w64-mingw32-ld
         - *wine-build-env
         - *wine-env
       before_install:
