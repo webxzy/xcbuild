@@ -20,7 +20,6 @@ build-shared:
       - cmake-data
     wine: &wine-build-packages
       - *linux-build-packages
-      - winehq-devel
   build-env:
     linux: &linux-build-env
       - NINJA_JOBS=2 # Travis is so parallel it runs out of memory. Limit that.
@@ -104,7 +103,6 @@ matrix:
             - gcc-mingw-w64-i686
             - g++-mingw-w64-i686
             - *wine-build-packages
-            - *wine-packages
     - os: linux
       dist: trusty
       compiler: clang-cl
@@ -118,6 +116,7 @@ matrix:
         - sudo add-apt-repository -y ppa:wine/wine-builds
         - sudo apt-get update -q
         - sudo dpkg --add-architecture i386
+        - sudo apt-get install -y winehq-devel
       addons:
         apt:
           sources:
@@ -126,4 +125,3 @@ matrix:
           packages:
             - clang-3.8
             - *wine-build-packages
-            - *wine-packages
