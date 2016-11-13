@@ -10,14 +10,33 @@ matrix:
   include:
     - os: linux
       dist: trusty
+      compiler: clang3.9
+      env:
+        - CC=clang-3.9
+        - CXX=clang++-3.9
+        - NINJA_JOBS=2 # Travis is so parallel it runs out of memory. Limit that.
+      addons:
+        apt:
+          sources:
+            - george-edison55-precise-backports
+            - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main'
+              key_url: 'http://apt.llvm.org/llvm-snapshot.gpg.key'
+          packages:
+            - clang-3.9
+            - pkg-config
+            - zlib1g-dev
+            - libpng-dev
+            - libxml2-dev
+            - ninja-build
+            - cmake
+            - cmake-data
+    - os: linux
+      dist: trusty
       compiler: gcc4.8
-      sudo: required
       env:
         - CC=gcc-4.8
         - CXX=g++-4.8
-
-        # Travis is so parallel it runs out of memory. Limit that.
-        - NINJA_JOBS=2
+        - NINJA_JOBS=2 # Travis is so parallel it runs out of memory. Limit that.
       addons:
         apt:
           sources:
