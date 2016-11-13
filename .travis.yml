@@ -98,11 +98,13 @@ matrix:
         apt:
           sources:
             # - *wine-build-sources
+            - *linux-build-sources
           packages:
             - binutils-mingw-w64-i686
             - gcc-mingw-w64-i686
             - g++-mingw-w64-i686
             # - *wine-build-packages
+            - *linux-build-packages
     - os: linux
       dist: trusty
       compiler: clang-cl
