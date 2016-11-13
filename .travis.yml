@@ -26,7 +26,7 @@ build-shared:
       - NINJA_FLAGS=-j2 # Travis is so parallel it runs out of memory. Limit that.
     wine: &wine-build-env
       - *linux-build-env
-      - CMAKE_FLAGS="-DCMAKE_SYSTEM_NAME=Windows -DCMAKE_RC_COMPILER=i686-w64-mingw32-windres"
+      - CMAKE_FLAGS="-DCMAKE_SYSTEM_NAME=Windows -DCMAKE_RC_COMPILER=i686-w64-mingw32-windres -DCMAKE_LINKER=i686-w64-mingw32-ld"
 
 shared:
   env:
@@ -112,7 +112,6 @@ matrix:
       env:
         - CC=clang-cl-3.8
         - CXX=clang-cl-3.8
-        - LD=i686-w64-mingw32-ld
         - *wine-build-env
         - *wine-env
       before_install:
