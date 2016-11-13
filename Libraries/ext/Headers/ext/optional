@@ -170,7 +170,7 @@ namespace std { namespace experimental { inline namespace fundamentals_v1 {
 
 #if defined(__clang__) || defined(__GNUC__)
 #define _EXT_ALWAYS_INLINE __attribute__ ((__always_inline__))
-#define _EXT_DEFAULT_VISIBLITY __attribute__ ((__visibility__("default")))
+#define _EXT_DEFAULT_VISIBILITY __attribute__ ((__visibility__("default")))
 #else
 #define _EXT_ALWAYS_INLINE
 #define _EXT_DEFAULT_VISIBILITY
