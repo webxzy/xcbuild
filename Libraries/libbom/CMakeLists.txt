@@ -15,7 +15,7 @@ add_library(bom SHARED
 
 target_link_libraries(bom PUBLIC)
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
-  target_link_libraries(lsbom PRIVATE wsock32 ws2_32)
+  target_link_libraries(bom PRIVATE wsock32 ws2_32)
 endif ()
 target_include_directories(bom PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Headers")
 install(TARGETS bom DESTINATION usr/lib)
