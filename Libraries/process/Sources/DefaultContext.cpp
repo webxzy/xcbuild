@@ -399,7 +399,7 @@ userHomeDirectory() const
 #if _WIN32
     auto buffer = WideString();
     buffer.reserve(MAX_PATH);
-    if (SHGetFolderPath(NULL, CSIDL_PROFILE, NULL, 0, &buffer[0]) != S_OK) {
+    if (SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, 0, &buffer[0]) != S_OK) {
         return ext::nullopt;
     }
 
