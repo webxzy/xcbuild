@@ -112,6 +112,8 @@ matrix:
       env:
         - CC=clang-cl-3.8
         - CXX=clang-cl-3.8
+        - CFLAGS=-Qunused-arguments
+        - CXXFLAGS=-Qunused-arguments
         - *wine-build-env
         - *wine-env
       before_install:
