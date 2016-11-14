@@ -46,8 +46,9 @@ static std::string
 WideStringToString(WideString const &str)
 {
     int size = WideCharToMultiByte(CP_UTF8, 0, str.data(), (int)str.size(), NULL, 0, NULL, NULL);
-    std::string multi = std::string(size);
-    WideCharToMultiByte(CP_UTF8, 0, str.data(), (int)str.size(), wide.data(), size, NULL, NULL);
+    std::string multi = std::string();
+    multi.reserve(size);
+    WideCharToMultiByte(CP_UTF8, 0, str.data(), (int)str.size(), &multi[0], size, NULL, NULL);
     return multi;
 }
 
@@ -239,8 +240,9 @@ ext::optional<std::string> DefaultContext::
 environmentVariable(std::string const &variable) const
 {
 #if _WIN32
+    auto name = StringToWideString(variable);
     auto buffer = WideString(32768);
-    if (GetEnvironmentVariable(StringToWideString(variable).data(), buffer.data(), buffer.size()) == 0) {
+    if (GetEnvironmentVariableW(name.data(), buffer.data(), buffer.size()) == 0) {
         assert(GetLastError() == ERROR_ENVVAR_NOT_FOUND);
         return ext::nullopt;
     }
@@ -265,16 +267,16 @@ environmentVariables() const
         std::unordered_map<std::string, std::string> values;
 
 #if _WIN32
-        LPCWSTR environment = GetEnvironmentStringsW();
-        if (environment == NULL) {
+        LPCWSTR variables = GetEnvironmentStringsW();
+        if (variables == NULL) {
             abort();
         }
 
-        LPCWSTR ptr = environment;
-        size_t length = wcslen(ptr);
+        LPCWSTR current = variables;
+        size_t length = wcslen(current);
         while (length != 0) {
-            size_t length = wcslen(ptr);
-            auto buffer = WideString(ptr, length);
+            size_t length = wcslen(current);
+            auto buffer = WideString(current, current + length);
             std::string variable = WideStringToString(buffer);
 
             std::string::size_type offset = variable.find('=');
@@ -282,11 +284,11 @@ environmentVariables() const
             std::string value = variable.substr(offset + 1);
             values.insert({ name, value });
 
-            ptr += length + 1;
-            length = wcslen(ptr);
+            current += length + 1;
+            length = wcslen(current);
         }
 
-        if (FreeEnvironmentStrings(environment) == 0) {
+        if (FreeEnvironmentStringsW(variables) == 0) {
             abort();
         }
 #else
