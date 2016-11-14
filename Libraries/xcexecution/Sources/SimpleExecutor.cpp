@@ -199,10 +199,12 @@ writeAuxiliaryFiles(
                 xcformatter::Formatter::Print(_formatter->setAuxiliaryExecutable(auxiliaryFile.path()));
 
                 if (!_dryRun) {
+#if !_WIN32
                     // FIXME: This should use the filesystem.
                     if (::chmod(auxiliaryFile.path().c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
                         return false;
                     }
+#endif
                 }
             }
         }
