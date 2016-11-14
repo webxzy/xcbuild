@@ -14,10 +14,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <stddef.h>
-#include <arpa/inet.h>
 #include <assert.h>
 #include <stdint.h>
 
+#if _WIN32
+#include <arpa/inet.h>
+#else
+#include <winsock2.h>
+#endif
 
 struct bom_tree_context {
     struct bom_context *context;
