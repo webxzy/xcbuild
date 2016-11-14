@@ -317,7 +317,6 @@ Decode(struct car_rendition_value *value)
     size_t bytes_per_pixel = Rendition::Data::FormatSize(format);
     size_t uncompressed_length = value->width * value->height * bytes_per_pixel;
     Rendition::Data data = Rendition::Data(std::vector<uint8_t>(uncompressed_length), format);
-    void *uncompressed_data = static_cast<void *>(data.data().data());
 
     /* Advance past the header and the info section. We just want the data. */
     struct car_rendition_data_header1 *header1 = (struct car_rendition_data_header1 *)((uintptr_t)value + sizeof(struct car_rendition_value) + value->info_len);
@@ -356,13 +355,13 @@ Decode(struct car_rendition_value *value)
             strm.avail_in = compressed_length;
             strm.next_in = (Bytef *)compressed_data;
 
-            int ret = inflateInit2(&strm, 16+MAX_WBITS);
+            int ret = inflateInit2(&strm, 16 + MAX_WBITS);
             if (ret != Z_OK) {
                return ext::nullopt;
             }
 
             strm.avail_out = uncompressed_length;
-            strm.next_out = (Bytef *)uncompressed_data;
+            strm.next_out = static_cast<Bytef *>(data.data().data());
 
             ret = inflate(&strm, Z_NO_FLUSH);
             if (ret != Z_OK && ret != Z_STREAM_END) {
@@ -392,7 +391,8 @@ Decode(struct car_rendition_value *value)
                 (compression_algorithm)_COMPRESSION_LZVN :
                 COMPRESSION_LZFSE;
 
-            size_t compression_result = compression_decode_buffer((uint8_t *)uncompressed_data + offset, uncompressed_length - offset, (uint8_t *)compressed_data, compressed_length, NULL, algorithm);
+            uint8_t *uncompressed_data = static_cast<uint8_t *>(data.data().data());
+            size_t compression_result = compression_decode_buffer(uncompressed_data + offset, uncompressed_length - offset, (uint8_t *)compressed_data, compressed_length, NULL, algorithm);
             if (compression_result != 0) {
                 offset += compression_result;
                 compressed_data = (void *)((uintptr_t)compressed_data + compressed_length);
@@ -446,16 +446,19 @@ Encode(Rendition const *rendition, ext::optional<Rendition::Data> data)
 
     std::vector<uint8_t> compressed_vector;
     if (compression_magic == car_rendition_data_compression_magic_zlib) {
-        int deflateLevel = Z_DEFAULT_COMPRESSION;
-        int windowSize = 16+MAX_WBITS;
+#if HAVE_ZLIB
         z_stream zlibStream;
         memset(&zlibStream, 0, sizeof(zlibStream));
-        zlibStream.next_in = (Bytef*)uncompressed_data;
-        zlibStream.avail_in = (uInt)uncompressed_length;
+        zlibStream.next_in = static_cast<Bytef *>(uncompressed_data);
+        zlibStream.avail_in = static_cast<uInt>(uncompressed_length);
+
+        int deflateLevel = Z_DEFAULT_COMPRESSION;
+        int windowSize = 16 + MAX_WBITS;
         int err = deflateInit2(&zlibStream, deflateLevel, Z_DEFLATED, windowSize, 8, Z_DEFAULT_STRATEGY);
         if (err != Z_OK) {
             return ext::nullopt;
         }
+
         while (true) {
             uint8_t tmp[4096];
             zlibStream.next_out = (Bytef*)&tmp;
@@ -474,6 +477,11 @@ Encode(Rendition const *rendition, ext::optional<Rendition::Data> data)
             }
         }
         deflateEnd(&zlibStream);
+#else
+        (void)uncompressed_data;
+        (void)uncompressed_length;
+        return ext::nullopt;
+#endif
     }
 
     std::vector<uint8_t> output = std::vector<uint8_t>(sizeof(struct car_rendition_data_header1));
