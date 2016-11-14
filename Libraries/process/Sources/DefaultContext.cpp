@@ -16,11 +16,15 @@
 #include <cstring>
 #include <cassert>
 
+#if _WIN32
+#include <windows.h>
+#else
 #include <pwd.h>
 #include <grp.h>
 #include <unistd.h>
 #include <sys/select.h>
 #include <errno.h>
+#endif
 
 #if defined(__APPLE__)
 #include <mach-o/dyld.h>
@@ -31,7 +35,31 @@
 #endif
 #endif
 
+#if !_WIN32
 extern "C" char **environ;
+#endif
+
+#if _WIN32
+using WideString = std::vector<std::remove_const<std::remove_pointer<LPCWSTR>::type>::type>;
+
+static std::string
+WideStringToString(WideString const &str)
+{
+    int size = WideCharToMultiByte(CP_UTF8, 0, str.data(), (int)str.size(), NULL, 0, NULL, NULL);
+    std::string multi = std::string(size);
+    WideCharToMultiByte(CP_UTF8, 0, str.data(), (int)str.size(), wide.data(), size, NULL, NULL);
+    return multi;
+}
+
+static WideString
+StringToWideString(std::string const &str)
+{
+    int size = MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), NULL, 0);
+    WideString wide = WideString(size);
+    MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), wide.data(), size);
+    return wide;
+}
+#endif
 
 using process::DefaultContext;
 using libutil::FSUtil;
@@ -54,10 +82,37 @@ currentDirectory() const
 
     std::once_flag flag;
     std::call_once(flag, []{
-        char path[PATH_MAX + 1];
-        if (::getcwd(path, sizeof(path)) == nullptr) {
-            path[0] = '\0';
+        std::string path;
+
+#if _WIN32
+        DWORD length = GetCurrentDirectoryW(0, NULL);
+        if (length == 0) {
+            abort();
         }
+
+        auto buffer = WideString(length);
+        if (GetCurrentDirectoryW(buffer.size(), buffer.data()) == 0) {
+            abort();
+        }
+
+        path = WideStringToString(buffer);
+#else
+        for (size_t size = PATH_MAX; true; size *= 2) {
+            std::string current = std::string();
+            current.reserve(size);
+
+            char *ret = ::getcwd(&current[0], current.size());
+            if (ret != nullptr) {
+                /* Success. */
+                path = current;
+                break;
+            } else if (errno == ERANGE) {
+                /* Needs more space. */
+            } else {
+                abort();
+            }
+        }
+#endif
 
         directory = new std::string(path);
     });
@@ -92,13 +147,30 @@ executablePath() const
 
     std::once_flag flag;
     std::call_once(flag, []{
-#if defined(__APPLE__)
+        std::string absolutePath;
+
+#if _WIN32
+        for (size_t size = MAX_PATH; true; size *= 2) {
+            auto buffer = WideString(size);
+            DWORD ret = GetModuleFileNameW(NULL, buffer.data(), buffer.size());
+            if (ret == 0) {
+                /* Failure. */
+                abort();
+            } else if (ret != size) {
+                /* Success. */
+                absolutePath = WideStringToString(buffer);
+                break;
+            } else {
+                /* Needs more space. */
+                assert(GetLastError() == ERROR_INSUFFICIENT_BUFFER);
+            }
+        }
+#elif defined(__APPLE__)
         uint32_t size = 0;
         if (_NSGetExecutablePath(NULL, &size) != -1) {
             abort();
         }
 
-        std::string absolutePath;
         absolutePath.resize(size);
         if (_NSGetExecutablePath(&absolutePath[0], &size) != 0) {
             abort();
@@ -114,7 +186,7 @@ executablePath() const
 #else
 #error Requires glibc on Linux.
 #endif
-        std::string absolutePath = FSUtil::ResolveRelativePath(std::string(path), std::string(initialWorkingDirectory));
+        absolutePath = FSUtil::ResolveRelativePath(std::string(path), std::string(initialWorkingDirectory));
 #else
 #error Unsupported platform.
 #endif
@@ -125,10 +197,11 @@ executablePath() const
     return *executablePath;
 }
 
+#if defined(__APPLE__) || defined(__linux__)
 static int commandLineArgumentCount = 0;
 static char **commandLineArgumentValues = NULL;
 
-#if !defined(__linux__)
+#if defined(__APPLE__)
 __attribute__((constructor))
 #endif
 static void CommandLineArgumentsInitialize(int argc, char **argv)
@@ -140,6 +213,7 @@ static void CommandLineArgumentsInitialize(int argc, char **argv)
 #if defined(__linux__)
 __attribute__((section(".init_array"))) auto commandLineArgumentInitializer = &CommandLineArgumentsInitialize;
 #endif
+#endif
 
 std::vector<std::string> const &DefaultContext::
 commandLineArguments() const
@@ -148,7 +222,14 @@ commandLineArguments() const
 
     std::once_flag flag;
     std::call_once(flag, []{
+#if _WIN32
+        // TODO
+        arguments = new std::vector<std::string>();
+#elif defined(__APPLE__) || defined(__linux__)
         arguments = new std::vector<std::string>(commandLineArgumentValues + 1, commandLineArgumentValues + commandLineArgumentCount);
+#else
+#error Unsupported platform.
+#endif
     });
 
     return *arguments;
@@ -157,11 +238,21 @@ commandLineArguments() const
 ext::optional<std::string> DefaultContext::
 environmentVariable(std::string const &variable) const
 {
+#if _WIN32
+    auto buffer = WideString(32768);
+    if (GetEnvironmentVariable(StringToWideString(variable).data(), buffer.data(), buffer.size()) == 0) {
+        assert(GetLastError() == ERROR_ENVVAR_NOT_FOUND);
+        return ext::nullopt;
+    }
+
+    return WideStringToString(buffer);
+#else
     if (char *value = getenv(variable.c_str())) {
         return std::string(value);
     } else {
         return ext::nullopt;
     }
+#endif
 }
 
 std::unordered_map<std::string, std::string> const &DefaultContext::
@@ -173,14 +264,41 @@ environmentVariables() const
     std::call_once(flag, []{
         std::unordered_map<std::string, std::string> values;
 
+#if _WIN32
+        LPCWSTR environment = GetEnvironmentStringsW();
+        if (environment == NULL) {
+            abort();
+        }
+
+        LPCWSTR ptr = environment;
+        size_t length = wcslen(ptr);
+        while (length != 0) {
+            size_t length = wcslen(ptr);
+            auto buffer = WideString(ptr, length);
+            std::string variable = WideStringToString(buffer);
+
+            std::string::size_type offset = variable.find('=');
+            std::string name = variable.substr(0, offset);
+            std::string value = variable.substr(offset + 1);
+            values.insert({ name, value });
+
+            ptr += length + 1;
+            length = wcslen(ptr);
+        }
+
+        if (FreeEnvironmentStrings(environment) == 0) {
+            abort();
+        }
+#else
         for (char **current = environ; *current; current++) {
             std::string variable = *current;
-            std::string::size_type offset = variable.find('=');
 
+            std::string::size_type offset = variable.find('=');
             std::string name = variable.substr(0, offset);
             std::string value = variable.substr(offset + 1);
             values.insert({ name, value });
         }
+#endif
 
         environment = new std::unordered_map<std::string, std::string>(values);
     });
@@ -195,6 +313,10 @@ userName() const
 
     std::once_flag flag;
     std::call_once(flag, []{
+#if _WIN32
+        // TODO
+        userName = new  std::string();
+#else
         if (struct passwd const *pw = ::getpwuid(::getuid())) {
             if (pw->pw_name != nullptr) {
                 userName = new std::string(pw->pw_name);
@@ -206,6 +328,7 @@ userName() const
             os << ::getuid();
             userName = new std::string(os.str());
         }
+#endif
     });
 
     return *userName;
@@ -218,6 +341,10 @@ groupName() const
 
     std::once_flag flag;
     std::call_once(flag, []{
+#if _WIN32
+        // TODO
+        groupName = new  std::string();
+#else
         if (struct group const *gr = ::getgrgid(::getgid())) {
             if (gr->gr_name != nullptr) {
                 groupName = new std::string(gr->gr_name);
@@ -229,6 +356,7 @@ groupName() const
             os << ::getgid();
             groupName = new std::string(os.str());
         }
+#endif
     });
 
     return *groupName;
@@ -237,22 +365,37 @@ groupName() const
 int32_t DefaultContext::
 userID() const
 {
+#if _WIN32
+    // TODO
+    return 0;
+#else
     return ::getuid();
+#endif
 }
 
 int32_t DefaultContext::
 groupID() const
 {
+#if _WIN32
+    // TODO
+    return 0;
+#else
     return ::getgid();
+#endif
 }
 
 ext::optional<std::string> DefaultContext::
 userHomeDirectory() const
 {
+#if _WIN32
+    // TODO
+    return ext::nullopt;
+#else
     if (ext::optional<std::string> value = Context::userHomeDirectory()) {
         return value;
     } else {
         char *home = getpwuid(getuid())->pw_dir;
         return std::string(home);
     }
+#endif
 }
