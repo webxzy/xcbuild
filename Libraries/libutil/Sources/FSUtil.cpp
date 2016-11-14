@@ -23,9 +23,11 @@ GetDirectoryName(std::string const &path)
     std::string::size_type pos = path.rfind('/');
     if (pos == std::string::npos) {
         return std::string();
-	} else {
+    } else if (pos == 0) {
+        return "/";
+    } else {
         return path.substr(0, pos);
-	}
+    }
 }
 
 std::string FSUtil::

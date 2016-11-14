@@ -17,9 +17,9 @@
 #include <iomanip>
 
 #if _WIN32
-#include <arpa/inet.h>
-#else
 #include <winsock2.h>
+#else
+#include <arpa/inet.h>
 #endif
 
 class Options {
