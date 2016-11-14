@@ -111,6 +111,8 @@ bom_context_memory_file(const char *fn, bool writeable, size_t minimum_size)
 {
 #if _WIN32
     // TODO: mmap
+    (void)_bom_context_memory_mremap;
+    (void)_bom_context_memory_munmap;
     return (struct bom_context_memory) {
         .data = NULL,
         .size = 0,
