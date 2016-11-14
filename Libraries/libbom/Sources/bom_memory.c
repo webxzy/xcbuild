@@ -74,6 +74,7 @@ _bom_context_memory_mremap(struct bom_context_memory *memory, size_t size)
 
 #if _WIN32
     // TODO: mmap
+    (void)context;
 #else
     munmap(memory->data, memory->size);
     if (size > memory->size) {
