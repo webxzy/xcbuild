@@ -250,7 +250,7 @@ Open(Filesystem const *filesystem, Context *context, std::string const &filename
         if (errors == 0 || array->count() == 0) {
             return specifications;
         } else {
-            fprintf(stderr, "error: specification failed to parse, errors %lu\n", errors);
+            fprintf(stderr, "error: specification failed to parse, errors %zu\n", errors);
             return ext::nullopt;
         }
     }
