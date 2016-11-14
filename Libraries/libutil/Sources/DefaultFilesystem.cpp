@@ -28,13 +28,14 @@
 using libutil::DefaultFilesystem;
 
 #if _WIN32
-using WideString = std::vector<std::remove_const<std::remove_pointer<LPCWSTR>::type>::type>;
+using WideString = std::basic_string<std::remove_const<std::remove_pointer<LPCWSTR>::type>::type>;
 
 static WideString
 StringToWideString(std::string const &str)
 {
     int size = MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), NULL, 0);
-    WideString wide = WideString(size);
+    WideString wide = WideString();
+    wide.reserve(size);
     MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), wide.data(), size);
     return wide;
 }
@@ -119,12 +120,17 @@ createFile(std::string const &path)
         return true;
     }
 
+#if _WIN32
+    return false;
+#else
     FILE *fp = std::fopen(path.c_str(), "w");
     if (fp == nullptr) {
         return false;
     }
 
     std::fclose(fp);
+#endif
+
     return true;
 }
 
@@ -163,6 +169,9 @@ createDirectory(std::string const &path)
 bool DefaultFilesystem::
 read(std::vector<uint8_t> *contents, std::string const &path, size_t offset, ext::optional<size_t> length) const
 {
+#if _WIN32
+    return false;
+#else
     FILE *fp = std::fopen(path.c_str(), "rb");
     if (fp == nullptr) {
         return false;
@@ -203,12 +212,17 @@ read(std::vector<uint8_t> *contents, std::string const &path, size_t offset, ext
     }
 
     std::fclose(fp);
+#endif
+
     return true;
 }
 
 bool DefaultFilesystem::
 write(std::vector<uint8_t> const &contents, std::string const &path)
 {
+#if _WIN32
+    return false;
+#else
     FILE *fp = std::fopen(path.c_str(), "wb");
     if (fp == nullptr) {
         return false;
@@ -224,6 +238,8 @@ write(std::vector<uint8_t> const &contents, std::string const &path)
     }
 
     std::fclose(fp);
+#endif
+
     return true;
 }
 
