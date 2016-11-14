@@ -277,7 +277,7 @@ std::string DefaultFilesystem::
 resolvePath(std::string const &path) const
 {
 #if _WIN32
-    return false;
+    return std::string();
 #else
     char realPath[PATH_MAX + 1];
     if (::realpath(path.c_str(), realPath) == nullptr) {
