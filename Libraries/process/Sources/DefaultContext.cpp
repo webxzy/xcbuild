@@ -40,7 +40,7 @@ extern "C" char **environ;
 #endif
 
 #if _WIN32
-using WideString = std::vector<std::remove_const<std::remove_pointer<LPCWSTR>::type>::type>;
+using WideString = std::basic_string<std::remove_const<std::remove_pointer<LPCWSTR>::type>::type>;
 
 static std::string
 WideStringToString(WideString const &str)
@@ -56,7 +56,8 @@ static WideString
 StringToWideString(std::string const &str)
 {
     int size = MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), NULL, 0);
-    WideString wide = WideString(size);
+    WideString wide = WideString();
+    wide.reserve(size);
     MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), wide.data(), size);
     return wide;
 }
@@ -91,8 +92,9 @@ currentDirectory() const
             abort();
         }
 
-        auto buffer = WideString(length);
-        if (GetCurrentDirectoryW(buffer.size(), buffer.data()) == 0) {
+        auto buffer = WideString();
+        buffer.reserve(length);
+        if (GetCurrentDirectoryW(buffer.size(), &buffer[0]) == 0) {
             abort();
         }
 
@@ -152,8 +154,10 @@ executablePath() const
 
 #if _WIN32
         for (size_t size = MAX_PATH; true; size *= 2) {
-            auto buffer = WideString(size);
-            DWORD ret = GetModuleFileNameW(NULL, buffer.data(), buffer.size());
+            auto buffer = WideString();
+            buffer.reserve(size);
+
+            DWORD ret = GetModuleFileNameW(NULL, &buffer[0], buffer.size());
             if (ret == 0) {
                 /* Failure. */
                 abort();
@@ -241,8 +245,10 @@ environmentVariable(std::string const &variable) const
 {
 #if _WIN32
     auto name = StringToWideString(variable);
-    auto buffer = WideString(32768);
-    if (GetEnvironmentVariableW(name.data(), buffer.data(), buffer.size()) == 0) {
+
+    auto buffer = WideString();
+    buffer.reserve(32768);
+    if (GetEnvironmentVariableW(name.data(), &buffer[0], buffer.size()) == 0) {
         assert(GetLastError() == ERROR_ENVVAR_NOT_FOUND);
         return ext::nullopt;
     }
@@ -267,7 +273,7 @@ environmentVariables() const
         std::unordered_map<std::string, std::string> values;
 
 #if _WIN32
-        LPCWSTR variables = GetEnvironmentStringsW();
+        LPWCH variables = GetEnvironmentStringsW();
         if (variables == NULL) {
             abort();
         }
@@ -390,8 +396,13 @@ ext::optional<std::string> DefaultContext::
 userHomeDirectory() const
 {
 #if _WIN32
-    // TODO
-    return ext::nullopt;
+    auto buffer = WideString();
+    buffer.reserve(MAX_PATH);
+    if (SHGetFolderPath(NULL, CSIDL_PROFILE, NULL, 0, &buffer[0]) != S_OK) {
+        return ext::nullopt;
+    }
+
+    return WideStringToString(buffer);
 #else
     if (ext::optional<std::string> value = Context::userHomeDirectory()) {
         return value;
