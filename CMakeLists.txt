@@ -12,7 +12,14 @@ project(xcbuild C CXX)
 cmake_minimum_required(VERSION 3.0)
 cmake_policy(SET CMP0054 NEW)
 
-# Linker options.
+# Platform compiler options.
+if ("${CMAKE_CXX_PLATFORM_ID}" STREQUAL "MinGW")
+  # Use MinGW formatting rather than MSVCRT for C99 support.
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__USE_MINGW_ANSI_STDIO=1")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__USE_MINGW_ANSI_STDIO=1")
+endif ()
+
+# Platform linker options.
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS True)
 elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
@@ -26,6 +33,7 @@ endif ()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 
+# Language version.
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC" OR "${CMAKE_CXX_SIMULATE_ID}" STREQUAL "MSVC")
   # C++ is by default. C99 is not supported.
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")

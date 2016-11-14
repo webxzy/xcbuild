@@ -90,8 +90,6 @@ matrix:
       env:
         - CC=i686-w64-mingw32-gcc
         - CXX=i686-w64-mingw32-g++
-        - CFLAGS=-D__USE_MINGW_ANSI_STDIO=1
-        - CXXFLAGS=-D__USE_MINGW_ANSI_STDIO=1
         - *wine-build-env
         - *wine-env
       before_install:
