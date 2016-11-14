@@ -16,14 +16,22 @@
 #include <string>
 #include <unordered_map>
 
+#if _WIN32
+// TODO
+#else
 #include <libxml/xmlreader.h>
+#endif
 
 namespace plist {
 namespace Format {
 
 class BaseXMLParser {
 private:
+#if _WIN32
+// TODO
+#else
     ::xmlTextReaderPtr _parser;
+#endif
     size_t             _depth;
 
 private:

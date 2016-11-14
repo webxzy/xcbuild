@@ -15,7 +15,11 @@
 using plist::Format::BaseXMLParser;
 
 BaseXMLParser::BaseXMLParser() :
+#if _WIN32
+// TODO
+#else
     _parser (nullptr),
+#endif
     _depth  (0)
 {
 }
@@ -23,6 +27,10 @@ BaseXMLParser::BaseXMLParser() :
 bool BaseXMLParser::
 parse(std::vector<uint8_t> const &contents)
 {
+#if _WIN32
+    // TODO
+    return false;
+#else
     _depth  = 0;
     _parser = ::xmlReaderForMemory(reinterpret_cast<char const *>(contents.data()), contents.size(), nullptr, nullptr, XML_PARSE_NOENT | XML_PARSE_NONET);
     if (_parser == nullptr) {
@@ -96,6 +104,7 @@ parse(std::vector<uint8_t> const &contents)
     onEndParse(ret == 0);
 
     return (ret == 0);
+#endif
 }
 
 void BaseXMLParser::
@@ -126,6 +135,9 @@ onCharacterData(std::string const &cdata, size_t depth)
 void BaseXMLParser::
 error(std::string format, ...)
 {
+#if _WIN32
+    // TODO
+#else
     static char const sErrorMessage[] = "syntax error";
 
     va_list  ap;
@@ -147,4 +159,5 @@ error(std::string format, ...)
 
     ::xmlFreeTextReader(_parser);
     _parser = nullptr;
+#endif
 }
