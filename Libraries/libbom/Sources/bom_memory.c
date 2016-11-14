@@ -13,16 +13,16 @@
 #include <bom/bom.h>
 
 #include <string.h>
-#include <unistd.h>
 #include <assert.h>
 
 #if _WIN32
 // TODO mmap
 #else
+#include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <fcntl.h>
+#include <unistd.h>
 #endif
 
 static void

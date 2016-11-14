@@ -10,8 +10,12 @@
 #include <process/DefaultLauncher.h>
 #include <libutil/Filesystem.h>
 
+#if _WIN32
+// TODO
+#else
 #include <sys/wait.h>
 #include <unistd.h>
+#endif
 
 using process::DefaultLauncher;
 using libutil::Filesystem;
@@ -30,6 +34,10 @@ DefaultLauncher::
 ext::optional<int> DefaultLauncher::
 launch(Filesystem *filesystem, Context const *context)
 {
+#if _WIN32
+    // TODO
+    return false;
+#else
     /*
      * Extract input data for exec, so no C++ is required after fork.
      */
@@ -105,4 +113,5 @@ launch(Filesystem *filesystem, Context const *context)
         ::waitpid(pid, &status, 0);
         return WEXITSTATUS(status);
     }
+#endif
 }

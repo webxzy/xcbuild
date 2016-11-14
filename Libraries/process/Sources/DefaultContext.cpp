@@ -18,6 +18,7 @@
 
 #if _WIN32
 #include <windows.h>
+#include <Shlobj.h>
 #else
 #include <pwd.h>
 #include <grp.h>
@@ -58,7 +59,7 @@ StringToWideString(std::string const &str)
     int size = MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), NULL, 0);
     WideString wide = WideString();
     wide.reserve(size);
-    MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), wide.data(), size);
+    MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), &wide[0], size);
     return wide;
 }
 #endif
