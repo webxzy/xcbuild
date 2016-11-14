@@ -11,11 +11,14 @@ project(xcbuild C CXX)
 
 cmake_minimum_required(VERSION 3.0)
 cmake_policy(SET CMP0054 NEW)
-set(CMAKE_MACOSX_RPATH 1)
 
-if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
+# Linker options.
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS True)
+elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
+  set(CMAKE_MACOSX_RPATH True)
   set(CMAKE_INSTALL_RPATH "@executable_path/../lib")
-elseif ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
   set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
 endif ()
 
