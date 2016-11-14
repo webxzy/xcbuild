@@ -318,8 +318,6 @@ Decode(struct car_rendition_value *value)
     size_t uncompressed_length = value->width * value->height * bytes_per_pixel;
     Rendition::Data data = Rendition::Data(std::vector<uint8_t>(uncompressed_length), format);
     uint8_t *uncompressed_data = static_cast<uint8_t *>(data.data().data());
-    (void)uncompressed_data;
-    (void)uncompressed_length;
 
     /* Advance past the header and the info section. We just want the data. */
     struct car_rendition_data_header1 *header1 = (struct car_rendition_data_header1 *)((uintptr_t)value + sizeof(struct car_rendition_value) + value->info_len);
@@ -339,6 +337,12 @@ Decode(struct car_rendition_value *value)
         compressed_data = &header2->data;
         compressed_length = header2->length;
     }
+
+    /* If no decompression formats are supporetd. */
+    (void)compressed_data;
+    (void)compressed_length;
+    (void)uncompressed_data;
+    (void)uncompressed_length;
 
     size_t offset = 0;
     while (offset < uncompressed_length) {
