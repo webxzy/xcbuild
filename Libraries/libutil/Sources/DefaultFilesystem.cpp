@@ -17,7 +17,7 @@
 #include <cerrno>
 
 #if _WIN32
-#include <Windows.h>
+#include <windows.h>
 #else
 #include <unistd.h>
 #include <libgen.h>
